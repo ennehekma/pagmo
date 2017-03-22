@@ -10,4 +10,6 @@ CMakeCache.txt
 *.o
 *.pyc
 CMakeFiles/
+*.sublime-project
+*.sublime-workspace
 
