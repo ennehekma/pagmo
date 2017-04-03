@@ -31,32 +31,22 @@ class __PAGMO_VISIBLE thesis: public base
 {
     public:
         thesis( unsigned int aDim       = 2, 
-                // double aData            = 0.5,
+                double departureEpochUpperBound = 86400,
+                double timeOfFlightUpperBound = 86400,
                 const Tle departureObject    = Tle(
                     "1 22830U 93061H   16010.66911318 -.00000005  00000-0  15512-4 0  9991",
                     "2 22830  98.8796   7.9979 0011279  21.4730 107.6291 14.31392246163351"),
                 const Tle arrivalObject      = Tle(
                     "1 20443U 90005H   16011.52874183  .00000186  00000-0  77220-4 0  9991", 
                     "2 20443  98.7809  34.7119 0011411 108.4586  53.3704 14.37782899359716"),
-                const DateTime initialEpoch  =  DateTime( 2016,1,12,12,0,0 ),
-                const double departureEpochUpperBound = 86400,
-                const double timeOfFlightUpperBound = 86400
-
+                const DateTime initialEpoch  =  DateTime( 2016,1,12,12,0,0 )
                 );
-
-
-        
-
 
         base_ptr clone() const;
         std::string get_name() const;
 
         std::string a_method() const;
         void set_member(const double);
-        // const double& get_member() const;
-        // const Tle& get_departure_object() const;
-        // const Tle& get_arrival_object() const;
-
 
     protected:
         void objfun_impl(fitness_vector &, const decision_vector &) const;
@@ -68,24 +58,12 @@ class __PAGMO_VISIBLE thesis: public base
         void serialize(Archive &ar, const unsigned int)
         {
             ar & boost::serialization::base_object<base>(*this);
-            // ar & departureObject;
-            // ar & arrivalObject;
-            // ar & initialEpoch;
-            // ar & m_member;
-            // ar & m_boe;
-            // ar & const_cast<Tle &>(arrivalObject);
-         //   ar & arrivalObject;
         }
-        // int enneiscool;
-        // double m_member;
-        // double m_boe;
-        // double hoeDan;
+        double departureEpochUpperBound;
+        double timeOfFlightUpperBound;
         const Tle departureObject;
         const Tle arrivalObject;
-        const DateTime initialEpoch;
-        const double departureEpochUpperBound;
-        const double timeOfFlightUpperBound;
-        // const Tle test;
+        DateTime initialEpoch;
 };
 
 }} // namespaces

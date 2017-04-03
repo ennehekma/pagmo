@@ -6,6 +6,9 @@
 #include "thesis.h"
 #include <SML/sml.hpp>
 #include <keplerian_toolbox/lambert_problem.h>
+// #include "/home/enne/sml/include/sml.hpp"
+// #include "/home/enne/pykep/src/lambert_problem.h"
+
 
 namespace pagmo { namespace problem {
 
@@ -18,22 +21,17 @@ namespace pagmo { namespace problem {
  * @param[in] t0_l kep_toolbox::epoch representing the lower bound for the launch epoch
  */
 thesis::thesis( unsigned int aDim, 
-                // double aData)
-                // double aData,
-                // double hoeDan,
+                double aDepartureEpochUpperBound,
+                double aTimeOfFlightUpperBound)
                 const Tle aDepartureObject,
                 const Tle anArrivalObject,
                 const DateTime anInitialEpoch,
-                const double aDepartureEpochUpperBound,
-                const double aTimeOfFlightUpperBound)
     :   base(aDim), 
-        // m_member(aData),
-        // m_boe(hoeDan),
+        departureEpochUpperBound (aDepartureEpochUpperBound),
+        timeOfFlightUpperBound (aTimeOfFlightUpperBound),
         departureObject( aDepartureObject ),
         arrivalObject( anArrivalObject ),
-        initialEpoch (anInitialEpoch),
-        departureEpochUpperBound (aDepartureEpochUpperBound),
-        timeOfFlightUpperBound (aTimeOfFlightUpperBound)
+        initialEpoch (anInitialEpoch)
 
 {
     // Construct here the problem (bounds etc.)
@@ -43,15 +41,9 @@ thesis::thesis( unsigned int aDim,
 
     lb[0] = 0;
     lb[1] = 1;
-    // lb[2] = 0;
-    // lb[3] = 0;
-    // lb[4] = 0;
     
     ub[0] = departureEpochUpperBound;
-    ub[1] = 2*86400;
-    // ub[2] = 100;
-    // ub[3] = 100;
-    // ub[4] =   1;
+    ub[1] = timeOfFlightUpperBound;
     set_bounds(lb,ub);
 }
 
@@ -65,10 +57,10 @@ base_ptr thesis::clone() const
 /// Implementation of the objective function.
 void thesis::objfun_impl(fitness_vector &f, const decision_vector &x) const
 {
-    // Define departure position:
-    const DateTime departureEpoch = initialEpoch.AddSeconds(x[0]);
+    
+    DateTime departureEpoch = initialEpoch.AddSeconds(x[0]);
     SGP4 sgp4Departure( departureObject );
-    const Eci tleDepartureState = sgp4Departure.FindPosition( departureEpoch );
+    Eci tleDepartureState = sgp4Departure.FindPosition( departureEpoch );
 
     boost::array< double, 3 > departurePosition;
     departurePosition[ 0 ] = tleDepartureState.Position( ).x;
@@ -81,9 +73,9 @@ void thesis::objfun_impl(fitness_vector &f, const decision_vector &x) const
     departureVelocity[ 2 ] = tleDepartureState.Velocity( ).z;
 
     // Define arrival position:
-    const DateTime arrivalEpoch = departureEpoch.AddSeconds( x[1] );
+    DateTime arrivalEpoch = departureEpoch.AddSeconds( x[1] );
     SGP4 sgp4Arrival( arrivalObject );
-    const Eci tleArrivalState   = sgp4Arrival.FindPosition( arrivalEpoch );
+    Eci tleArrivalState   = sgp4Arrival.FindPosition( arrivalEpoch );
 
     boost::array< double, 3 > arrivalPosition;
     arrivalPosition[ 0 ] = tleArrivalState.Position( ).x;
@@ -103,7 +95,7 @@ void thesis::objfun_impl(fitness_vector &f, const decision_vector &x) const
                                            1,   // !input.isPrograde,
                                            50);// input.revolutionsMaximum 
 
-    const int numberOfSolutions = targeter.get_v1( ).size( );
+    int numberOfSolutions = targeter.get_v1( ).size( );
 
     // Compute Delta-Vs for transfer and determine index of lowest.
     typedef std::vector< boost::array< double, 3 > > VelocityList;
@@ -116,8 +108,8 @@ void thesis::objfun_impl(fitness_vector &f, const decision_vector &x) const
     for ( int i = 0; i < numberOfSolutions; i++ )
     {
         // Compute Delta-V for transfer.
-        const boost::array< double, 3 > transferDepartureVelocity = targeter.get_v1( )[ i ];
-        const boost::array< double, 3 > transferArrivalVelocity = targeter.get_v2( )[ i ];
+        boost::array< double, 3 > transferDepartureVelocity = targeter.get_v1( )[ i ];
+        boost::array< double, 3 > transferArrivalVelocity = targeter.get_v2( )[ i ];
 
         departureDeltaVs[ i ] = sml::add( transferDepartureVelocity,
                                           sml::multiply( departureVelocity, -1.0 ) );
@@ -128,18 +120,9 @@ void thesis::objfun_impl(fitness_vector &f, const decision_vector &x) const
             = sml::norm< double >( departureDeltaVs[ i ] )
                 + sml::norm< double >( arrivalDeltaVs[ i ] );
     }
-    const TransferDeltaVList::iterator minimumDeltaVIterator
+    TransferDeltaVList::iterator minimumDeltaVIterator
         = std::min_element( transferDeltaVs.begin( ), transferDeltaVs.end( ) );
-    // const int minimumDeltaVIndex
-    //     = std::distance( transferDeltaVs.begin( ), minimumDeltaVIterator );
-
     f[0] = *minimumDeltaVIterator;
-    // std::cout << f[0] << std::endl;
-    
-    // f[0] = 0.0;
-    // for (decision_vector::size_type i = 0; i < x.size(); ++i) {
-    //     f[0] += x[i];
-    // }
 }
 
 /// Gets the data member
