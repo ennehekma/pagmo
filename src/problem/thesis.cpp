@@ -22,10 +22,10 @@ namespace pagmo { namespace problem {
  */
 thesis::thesis( unsigned int aDim, 
                 double aDepartureEpochUpperBound,
-                double aTimeOfFlightUpperBound)
+                double aTimeOfFlightUpperBound,
                 const Tle aDepartureObject,
                 const Tle anArrivalObject,
-                const DateTime anInitialEpoch,
+                const DateTime anInitialEpoch)
     :   base(aDim), 
         departureEpochUpperBound (aDepartureEpochUpperBound),
         timeOfFlightUpperBound (aTimeOfFlightUpperBound),
