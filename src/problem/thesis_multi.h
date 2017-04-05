@@ -50,6 +50,7 @@ class __PAGMO_VISIBLE thesis_multi: public base
 
         std::string a_method() const;
         void set_member(const double);
+	virtual ~thesis_multi();
         // const double& get_member() const;
 
     protected:

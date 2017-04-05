@@ -4,10 +4,8 @@
 #include <cmath>
 
 #include "thesis_multi.h"
-#include <SML/sml.hpp>
-#include <keplerian_toolbox/lambert_problem.h>
-// #include "/home/enne/sml/include/sml.hpp"
-// #include "/home/enne/pykep/src/lambert_problem.h"
+#include "/home/enne/sml/include/sml.hpp"
+#include "/home/enne/pykep/src/lambert_problem.h"
 
 
 namespace pagmo { namespace problem {
@@ -177,6 +175,9 @@ void thesis_multi::objfun_impl(fitness_vector &f, const decision_vector &x) cons
         f[0] = std::accumulate(deltaVs.begin(), deltaVs.end(), 0.0);
     }
 }
+
+
+thesis_multi::~thesis_multi() {} 
 
 /// Gets the data member
 /**
