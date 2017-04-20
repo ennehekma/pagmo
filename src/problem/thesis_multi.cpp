@@ -4,8 +4,10 @@
 #include <cmath>
 
 #include "thesis_multi.h"
-#include "/home/enne/sml/include/sml.hpp"
-#include "/home/enne/pykep/src/lambert_problem.h"
+#include <SML/sml.hpp>
+#include <keplerian_toolbox/lambert_problem.h>
+// #include "/home/enne/sml/include/sml.hpp"
+// #include "/home/enne/pykep/src/lambert_problem.h"
 
 
 namespace pagmo { namespace problem {
@@ -130,43 +132,87 @@ void thesis_multi::objfun_impl(fitness_vector &f, const decision_vector &x) cons
                 arrivalVelocity[ 2 ] = tleArrivalState.Velocity( ).z;
         
                 // Calculate minimum DV
-                kep_toolbox::lambert_problem targeter( departurePosition,
-                                                       arrivalPosition,
-                                                       currentTimeOfFlight, // timeOfFlight
-                                                       kMU, // earthGravitationalParameter,
-                                                       1,   // !input.isPrograde,
-                                                       50);// input.revolutionsMaximum 
+                // kep_toolbox::lambert_problem targeter( departurePosition,
+                //                                        arrivalPosition,
+                //                                        currentTimeOfFlight, // timeOfFlight
+                //                                        kMU, // earthGravitationalParameter,
+                //                                        1,   // !input.isPrograde,
+                //                                        50);// input.revolutionsMaximum 
         
-                int numberOfSolutions = targeter.get_v1( ).size( );
+                // int numberOfSolutions = targeter.get_v1( ).size( );
         
-                // Compute Delta-Vs for transfer and determine index of lowest.
-                typedef std::vector< boost::array< double, 3 > > VelocityList;
-                VelocityList departureDeltaVs( numberOfSolutions );
-                VelocityList arrivalDeltaVs( numberOfSolutions );
+                // // Compute Delta-Vs for transfer and determine index of lowest.
+                // typedef std::vector< boost::array< double, 3 > > VelocityList;
+                // VelocityList departureDeltaVs( numberOfSolutions );
+                // VelocityList arrivalDeltaVs( numberOfSolutions );
         
-                typedef std::vector< double > TransferDeltaVList;
-                TransferDeltaVList transferDeltaVs( numberOfSolutions );
+                // typedef std::vector< double > TransferDeltaVList;
+                // TransferDeltaVList transferDeltaVs( numberOfSolutions );
         
-                for ( int i = 0; i < numberOfSolutions; i++ )
+                // for ( int i = 0; i < numberOfSolutions; i++ )
+                // {
+                //     // Compute Delta-V for transfer.
+                //     boost::array< double, 3 > transferDepartureVelocity = targeter.get_v1( )[ i ];
+                //     boost::array< double, 3 > transferArrivalVelocity = targeter.get_v2( )[ i ];
+        
+                //     departureDeltaVs[ i ] = sml::add( transferDepartureVelocity,
+                //                                 sml::multiply( departureVelocity, -1.0 ) );
+                //     arrivalDeltaVs[ i ]   = sml::add( arrivalVelocity,
+                //                                 sml::multiply( transferArrivalVelocity, -1.0 ) );
+        
+                //     transferDeltaVs[ i ]
+                //         = sml::norm< double >( departureDeltaVs[ i ] )
+                //             + sml::norm< double >( arrivalDeltaVs[ i ] );
+                // }
+                // TransferDeltaVList::iterator minimumDeltaVIterator
+                //     = std::min_element( transferDeltaVs.begin( ), transferDeltaVs.end( ) );
+                double bestDV = 1000.0;
+                // Calculate minimum DV
+                for (int i = 0; i < 2; ++i)
                 {
-                    // Compute Delta-V for transfer.
-                    boost::array< double, 3 > transferDepartureVelocity = targeter.get_v1( )[ i ];
-                    boost::array< double, 3 > transferArrivalVelocity = targeter.get_v2( )[ i ];
-        
-                    departureDeltaVs[ i ] = sml::add( transferDepartureVelocity,
-                                                sml::multiply( departureVelocity, -1.0 ) );
-                    arrivalDeltaVs[ i ]   = sml::add( arrivalVelocity,
-                                                sml::multiply( transferArrivalVelocity, -1.0 ) );
-        
-                    transferDeltaVs[ i ]
-                        = sml::norm< double >( departureDeltaVs[ i ] )
-                            + sml::norm< double >( arrivalDeltaVs[ i ] );
+                    /* code */
+                    kep_toolbox::lambert_problem targeter( departurePosition,
+                                                           arrivalPosition,
+                                                           x[1], // timeOfFlight
+                                                           kMU, // earthGravitationalParameter,
+                                                           i,   // !input.isPrograde,
+                                                           50);// input.revolutionsMaximum 
+
+                    int numberOfSolutions = targeter.get_v1( ).size( );
+
+                    // Compute Delta-Vs for transfer and determine index of lowest.
+                    typedef std::vector< boost::array< double, 3 > > VelocityList;
+                    VelocityList departureDeltaVs( numberOfSolutions );
+                    VelocityList arrivalDeltaVs( numberOfSolutions );
+
+                    typedef std::vector< double > TransferDeltaVList;
+                    TransferDeltaVList transferDeltaVs( numberOfSolutions );
+
+                    for ( int i = 0; i < numberOfSolutions; i++ )
+                    {
+                        // Compute Delta-V for transfer.
+                        boost::array< double, 3 > transferDepartureVelocity = targeter.get_v1( )[ i ];
+                        boost::array< double, 3 > transferArrivalVelocity = targeter.get_v2( )[ i ];
+
+                        departureDeltaVs[ i ] = sml::add( transferDepartureVelocity,
+                                                          sml::multiply( departureVelocity, -1.0 ) );
+                        arrivalDeltaVs[ i ]   = sml::add( arrivalVelocity,
+                                                          sml::multiply( transferArrivalVelocity, -1.0 ) );
+
+                        transferDeltaVs[ i ]
+                            = sml::norm< double >( departureDeltaVs[ i ] )
+                                + sml::norm< double >( arrivalDeltaVs[ i ] );
+                    }
+                    TransferDeltaVList::iterator minimumDeltaVIterator
+                        = std::min_element( transferDeltaVs.begin( ), transferDeltaVs.end( ) );
+                    if ( *minimumDeltaVIterator < bestDV )
+                    {
+                        bestDV = *minimumDeltaVIterator;
+                    }
                 }
-                TransferDeltaVList::iterator minimumDeltaVIterator
-                    = std::min_element( transferDeltaVs.begin( ), transferDeltaVs.end( ) );
-                
+                // f[0] = ;
                 // Store lowest DV for outside for loop
-                deltaVs[leg] = *minimumDeltaVIterator;             
+                deltaVs[leg] = bestDV;             
                 
                 // Save arrival epoch plus stay time for check in next iteration
                 previousArrival = arrivalEpoch.AddSeconds(stayTime);
